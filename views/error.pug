@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  if err.status === 404
+    h1= 'Page Not Found'
+  else
+    h1= 'Server Error'
+  p= err.message
+
+  if err.status === 404
+    p
+      a(class='button' href='/') Home
