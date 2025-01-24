@@ -53,8 +53,11 @@ router.post(
       book = await Book.create(req.body);
       res.redirect("/books");
     } catch (error) {
+      console.log("Catch");
       if (error.name === "SequelizeValidationError") {
+        console.log("SQL error", error.name);
         book = await Book.build(req.body);
+        console.log(error.errors);
         res.render("new-book", {
           book,
           errors: error.errors,
@@ -89,7 +92,7 @@ router.post(
       book = await Book.findByPk(req.params.id);
       if (book) {
         await book.update(req.body);
-        res.redirect("/books/" + book.id);
+        res.redirect("/books");
       } else {
         res.sendStatus(404);
       }
@@ -97,7 +100,7 @@ router.post(
       if (error.name === "SequelizeValidationError") {
         book = await Book.build(req.body);
         book.id = req.params.id;
-        res.render("books/edit", {
+        res.render("update-book", {
           book,
           errors: error.errors,
           title: "Update Book",
