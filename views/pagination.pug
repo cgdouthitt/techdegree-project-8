@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  form(action="/books", method="get") 
+      p 
+        input(name="search", type="hidden",value=search)
+        - var n = 0;
+        while n < pages
+          - n++
+          input(name="page",type="submit", value=n)

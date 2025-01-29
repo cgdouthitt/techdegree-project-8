@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  form(action="/books", method="get") 
+      p 
+        label(for="search") Search 
+        input(name="search", type="text", id="search")
+        input(name="page", type="hidden",value=1)
+        input(type="submit", value="Search")

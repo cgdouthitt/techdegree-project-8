@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 
+const { Op } = require("sequelize");
 const db = require("../models");
 const { Book } = db;
 
@@ -31,11 +32,71 @@ function asyncHandler(cb) {
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const books = await Book.findAll({
-      attributes: ["id", "title", "author", "genre", "year"],
-      raw: true,
+    async function getPaginatedData(model, page, pageSize, where = {}) {
+      const offset = (page - 1) * pageSize;
+
+      const { count, rows } = await model.findAndCountAll({
+        where,
+        offset,
+        limit: pageSize,
+        attributes: ["id", "title", "author", "genre", "year"],
+        raw: true,
+      });
+
+      return {
+        totalItems: count,
+        totalPages: Math.ceil(count / pageSize),
+        currentPage: page,
+        data: rows,
+      };
+    }
+
+    let search = "";
+    if (req.query.search === null || req.query.search === undefined) {
+      search = "";
+    } else {
+      search = req.query.search;
+    }
+    console.log(req.query);
+
+    let page;
+    if (req.query.page === null || req.query.page === undefined) {
+      page = 1;
+    } else {
+      page = req.query.page;
+    }
+    const pageSize = 5;
+    const whereCondition = {
+      [Op.or]: {
+        title: {
+          [Op.like]: `%${search}%`,
+        },
+        author: {
+          [Op.like]: `%${search}%`,
+        },
+        genre: {
+          [Op.like]: `%${search}%`,
+        },
+        year: {
+          [Op.eq]: `%${search}%`,
+        },
+      },
+    };
+
+    const paginatedBooks = await getPaginatedData(
+      Book,
+      page,
+      pageSize,
+      whereCondition
+    );
+    // console.log(paginatedBooks);
+    res.render("index", {
+      books: paginatedBooks.data,
+      title: "Books",
+      page: page,
+      search: search,
+      pages: paginatedBooks.totalPages,
     });
-    res.render("index", { books: books, title: "Books" });
   })
 );
 
@@ -73,12 +134,13 @@ router.post(
 /* GET individual book. */
 router.get(
   "/:id",
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (err, req, res, next) => {
     const book = await Book.findByPk(req.params.id);
-    if (book) {
+    // console.log(book);
+    if (book != null) {
       res.render("update-book", { book, title: "Update Book" });
     } else {
-      res.sendStatus(404);
+      next(err);
     }
   })
 );

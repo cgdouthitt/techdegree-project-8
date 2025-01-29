@@ -29,7 +29,7 @@ app.use(function (req, res, next) {
   );
   err.status = 404;
   console.log("404 error handler called", err);
-  res.status(404).render("error", { err, title: "Page Not Found" });
+  res.status(404).render("page-not-found", { err, title: "Page Not Found" });
 });
 
 // error handler
