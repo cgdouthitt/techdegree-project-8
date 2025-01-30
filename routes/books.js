@@ -75,7 +75,7 @@ router.get(
           [Op.like]: `%${search}%`,
         },
         year: {
-          [Op.eq]: `%${search}%`,
+          [Op.eq]: `${search}`,
         },
       },
     };
