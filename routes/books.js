@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const db = require("../models");
 const { Book } = db;
 
+/* Testing database connection */
 (async () => {
   await db.sequelize.sync();
 
@@ -32,6 +33,7 @@ function asyncHandler(cb) {
 router.get(
   "/",
   asyncHandler(async (req, res) => {
+    /* function for retrieving data with all necessary inputs */
     async function getPaginatedData(model, page, pageSize, where = {}) {
       const offset = (page - 1) * pageSize;
 
@@ -51,20 +53,15 @@ router.get(
       };
     }
 
-    let search = "";
-    if (req.query.search === null || req.query.search === undefined) {
-      search = "";
-    } else {
-      search = req.query.search;
-    }
-    console.log(req.query);
-
-    let page;
-    if (req.query.page === null || req.query.page === undefined) {
-      page = 1;
-    } else {
-      page = req.query.page;
-    }
+    /* Defining data function inputs */
+    const search =
+      req.query.search === null || req.query.search === undefined
+        ? ""
+        : req.query.search;
+    const page =
+      req.query.page === null || req.query.page === undefined
+        ? 1
+        : req.query.page;
     const pageSize = 5;
     const whereCondition = {
       [Op.or]: {
@@ -89,11 +86,11 @@ router.get(
       pageSize,
       whereCondition
     );
-    // console.log(paginatedBooks);
+
     res.render("index", {
       books: paginatedBooks.data,
       title: "Books",
-      page: page,
+      page: paginatedBooks.currentPage,
       search: search,
       pages: paginatedBooks.totalPages,
     });
@@ -114,11 +111,8 @@ router.post(
       book = await Book.create(req.body);
       res.redirect("/books");
     } catch (error) {
-      console.log("Catch");
       if (error.name === "SequelizeValidationError") {
-        console.log("SQL error", error.name);
         book = await Book.build(req.body);
-        console.log(error.errors);
         res.render("new-book", {
           book,
           errors: error.errors,
@@ -134,12 +128,13 @@ router.post(
 /* GET individual book. */
 router.get(
   "/:id",
-  asyncHandler(async (err, req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const book = await Book.findByPk(req.params.id);
-    // console.log(book);
     if (book != null) {
       res.render("update-book", { book, title: "Update Book" });
     } else {
+      const err = new Error("Page Not Found");
+      err.status = 404;
       next(err);
     }
   })
